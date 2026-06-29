@@ -39,11 +39,7 @@ async def start(update, context):
         [InlineKeyboardButton("اردو", callback_data="lang_ur"), InlineKeyboardButton("Русский", callback_data="lang_ru")],
         [InlineKeyboardButton("فارسی", callback_data="lang_fa"), InlineKeyboardButton("Indonesia", callback_data="lang_id")]
     ]
-    await update.message.reply_text("يرجى اختيار لغتك / Please select your language:", reply_markup=InlineKeyboardMarkup(kb))
 
-async def login_start(update, context):
-    context.user_data["step"] = "email"
-    await update.message.reply_text(get_text(context, "email"))
 
 async def button_handler(update, context):
     q = update.callback_query
@@ -52,45 +48,4 @@ async def button_handler(update, context):
     
     try:
         if q.data.startswith("lang_"):
-            context.user_data["lang"] = q.data.split("_")[1]
-            await q.edit_message_text(get_text(context, "start"))
-        elif q.data in ["change_email", "change_pass"]:
-            context.user_data["action"] = q.data
-            context.user_data["step"] = "new_value"
-            await q.edit_message_text(get_text(context, "new_val"))
-    except Exception as e:
-        print(f"Error: {e}")
-
-async def handle_text(update, context):
-    step = context.user_data.get("step")
-    if step == "email":
-        context.user_data["email"] = update.message.text
-        context.user_data["step"] = "password"
-        await update.message.reply_text(get_text(context, "pass"))
-    elif step == "password":
-        res = firebase_request("verifyPassword", {"email": context.user_data["email"], "password": update.message.text, "returnSecureToken": True})
-        if "idToken" in res:
-            context.user_data.update({"idToken": res["idToken"], "localId": res["localId"]})
-            kb = [[InlineKeyboardButton(get_text(context, "change_email"), callback_data="change_email")],
-                  [InlineKeyboardButton(get_text(context, "change_pass"), callback_data="change_pass")]]
-            await update.message.reply_text(get_text(context, "success"), reply_markup=InlineKeyboardMarkup(kb))
-        else:
-            await update.message.reply_text(get_text(context, "error"))
-        context.user_data["step"] = None
-    elif step == "new_value":
-        payload = {"idToken": context.user_data["idToken"], ("email" if context.user_data["action"] == "change_email" else "password"): update.message.text}
-        res = firebase_request("setAccountInfo", payload)
-        await update.message.reply_text(get_text(context, "done") if "localId" in res else get_text(context, "fail"))
-        context.user_data["step"] = None
-
-def main():
-    app = Application.builder().token(BOT_TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("login", login_start))
-    app.add_handler(CallbackQueryHandler(button_handler))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
-    print("البوت يعمل الآن...")
-    app.run_polling()
-
-if __name__ == "__main__":
-    main()
+            context.user_data["lang"] = q.
